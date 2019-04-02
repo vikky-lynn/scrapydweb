@@ -1,10 +1,10 @@
-# coding: utf-8
+# coding: utf8
 import json
 import logging
 import re
 import time
 import traceback
-
+import uuid
 from ..common import get_now_string, get_response_from_view, handle_metadata
 from ..database import Task, TaskResult, TaskJobResult, db
 from ..utils.scheduler import scheduler
@@ -18,8 +18,8 @@ EXTRACT_URL_SERVER_PATTERN = re.compile(r'//(.+?:\d+)')
 
 class TaskExecuter(object):
 
-    def __init__(self, task_id, task_name, url_scrapydweb, url_schedule_task, url_delete_task_result,
-                 auth, selected_nodes):
+    def __init__(self, task_id, jobid, task_name, url_scrapydweb, url_schedule_task, url_delete_task_result,
+                 auth, selected_nodes, project_name=None):
         self.task_id = task_id
         self.task_name = task_name
         self.url_scrapydweb = url_scrapydweb
@@ -28,7 +28,9 @@ class TaskExecuter(object):
         self.auth = auth
         self.data = dict(
             task_id=task_id,
-            jobid='task_%s_%s' % (task_id, get_now_string(allow_space=False))
+            project_name=project_name,
+            jobid='%s' % (jobid),
+            # taskid=task_id  #TODO
         )
         self.selected_nodes = selected_nodes
         self.task_result_id = None  # Be set in get_task_result_id()
@@ -86,6 +88,7 @@ class TaskExecuter(object):
             # assert False
             # time.sleep(10)
             js = get_response_from_view(url_schedule_task, auth=self.auth, data=self.data, as_json=True)
+            # self.data['execute_ip'] = re.search(EXTRACT_URL_SERVER_PATTERN, js['url']).group(1)
             assert js['status_code'] == 200 and js['status'] == 'ok', "Request got %s" % js
         except Exception as err:
             if node not in self.nodes_to_retry:
@@ -159,7 +162,9 @@ def execute_task(task_id):
             username = metadata.get('username', '')
             password = metadata.get('password', '')
             url_delete_task_result = metadata.get('url_delete_task_result', '/1/tasks/xhr/delete/1/1/')
-            task_executer = TaskExecuter(task_id=task_id,
+            task_executer = TaskExecuter(project_name=task.project,
+                                         task_id=task_id,
+                                         jobid=task.jobid,
                                          task_name=task.name,
                                          url_scrapydweb=metadata.get('url_scrapydweb', 'http://127.0.0.1:5000'),
                                          url_schedule_task=metadata.get('url_schedule_task', '/1/schedule/task/'),
