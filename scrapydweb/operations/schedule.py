@@ -1,4 +1,4 @@
-# coding: utf-8
+# coding: utf8
 from collections import OrderedDict
 from datetime import datetime
 import io
@@ -9,7 +9,7 @@ import os
 import pickle
 import re
 import traceback
-
+import uuid
 from flask import Blueprint, redirect, render_template, request, send_file, url_for
 
 from ..database import Task, db
@@ -105,7 +105,8 @@ class ScheduleView(MyView):
         settings_dict = dict(s.split('=') for s in settings_arguments.pop('setting'))
         arguments_dict = settings_arguments
 
-        self.kwargs['jobid'] = task.jobid or self.get_now_string()
+        # self.kwargs['jobid'] = task.jobid or self.get_now_string()
+        self.kwargs['jobid'] = task.jobid or str(uuid.uuid1()).replace('-','')
         USER_AGENT = settings_dict.pop('USER_AGENT', '')
         # Chrome|iPhone|iPad|Android
         self.kwargs['USER_AGENT'] = dict((v, k) for k, v in UA_DICT.items()).get(USER_AGENT, '')
@@ -237,7 +238,8 @@ class ScheduleCheckView(MyView):
         if self.data['_version'] == self.DEFAULT_LATEST_VERSION:
             self.data.pop('_version')
 
-        jobid = request.form.get('jobid') or self.get_now_string()
+        # jobid = request.form.get('jobid') or self.get_now_string()
+        jobid = request.form.get('jobid') or str(uuid.uuid1()).replace('-','')
         self.data['jobid'] = re.sub(self.LEGAL_NAME_PATTERN, '-', jobid)
 
         self.data['setting'] = []
@@ -389,6 +391,10 @@ class ScheduleRunView(MyView):
             self.add_update_task()
         else:
             self._action = 'run'
+            self.data['project_name']=self.data.get('project')
+            self.data['_version']=self.data.get('_version',None)
+            self.data['task_id']=None
+            self.data['create_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             status_code, self.js = self.make_request(self.url, data=self.data, auth=self.AUTH)
 
     # https://apscheduler.readthedocs.io/en/latest/userguide.html
@@ -631,8 +637,10 @@ class ScheduleTaskView(MyView):
             self.data['project'] = task.project
             if task.version != self.DEFAULT_LATEST_VERSION:
                 self.data['_version'] = task.version
+            self.data['project_name']=self.data.get('project')
             self.data['spider'] = task.spider
-            self.data['jobid'] = self.jobid
+            self.data['task_id']=self.task_id
+            self.data['create_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             self.data.update(json.loads(task.settings_arguments))
             status_code, js = self.make_request(self.url, data=self.data, auth=self.AUTH)
 
