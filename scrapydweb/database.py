@@ -1,4 +1,4 @@
-# coding: utf-8
+# coding: utf8
 from datetime import datetime
 from pprint import pformat
 import time
@@ -6,7 +6,7 @@ import time
 from flask_sqlalchemy import SQLAlchemy
 
 from .vars import STATE_RUNNING
-
+import uuid
 
 db = SQLAlchemy(session_options=dict(autocommit=False, autoflush=True))
 
@@ -87,7 +87,8 @@ def create_jobs_table(server):
 class Task(db.Model):
     __tablename__ = 'task'
 
-    id = db.Column(db.Integer, primary_key=True)
+    # id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True,default=int(time.time()*10000))  # Pending
     name = db.Column(db.String(255), unique=False, nullable=True)  # None
     trigger = db.Column(db.String(8), unique=False, nullable=False)  # cron, interval, date
     create_time = db.Column(db.DateTime, unique=False, nullable=False, default=datetime.now)  # datetime.utcnow
@@ -96,7 +97,8 @@ class Task(db.Model):
     project = db.Column(db.String(255), unique=False, nullable=False)
     version = db.Column(db.String(255), unique=False, nullable=False)
     spider = db.Column(db.String(255), unique=False, nullable=False)
-    jobid = db.Column(db.String(255), unique=False, nullable=False)
+    # jobid = db.Column(db.String(255), unique=False, nullable=False)
+    jobid = db.Column(db.String(64), unique=True, nullable=False,default=str(uuid.uuid1()).replace('-',''))  # Pending
     settings_arguments = db.Column(db.String(2000), unique=False, nullable=False)
     selected_nodes = db.Column(db.String(1000), unique=False, nullable=False)
 
