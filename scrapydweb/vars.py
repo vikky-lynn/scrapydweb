@@ -10,9 +10,14 @@ from apscheduler.schedulers.base import STATE_PAUSED, STATE_RUNNING, STATE_STOPP
 PYTHON_VERSION = '.'.join([str(n) for n in sys.version_info[:3]])
 PY2 = sys.version_info.major < 3
 
-
+# CWD = os.path.dirname(os.path.abspath(__file__))
 CWD = os.getcwd()
 DATA_PATH = os.path.join(CWD, 'data')
+# try:
+#     os.mkdir(DATA_PATH)
+# except:
+#     pass
+# os.path.join(, SCRAPYDWEB_SETTINGS_PY)
 DATABASE_PATH = os.path.join(DATA_PATH, 'database')
 DEMO_PROJECTS_PATH = os.path.join(DATA_PATH, 'demo_projects')
 DEPLOY_PATH = os.path.join(DATA_PATH, 'deploy')
