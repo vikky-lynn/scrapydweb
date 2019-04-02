@@ -1,9 +1,9 @@
-# coding: utf-8
+# coding: utf8
 import re
 import time
 
 from ..myview import MyView
-
+import uuid
 
 API_MAP = dict(start='schedule', stop='cancel', forcestop='cancel', liststats='logs/stats')
 
@@ -43,7 +43,7 @@ class ApiView(MyView):
         self.data = dict(project=self.project)
         if self.opt == 'start':
             self.data['spider'] = self.version_spider_job
-            self.data['jobid'] = self.get_now_string()
+            self.data['jobid'] = str(uuid.uuid1()).replace('-','')
         elif self.opt in ['stop', 'forcestop']:
             self.data['job'] = self.version_spider_job
         elif self.opt == 'delversion':
